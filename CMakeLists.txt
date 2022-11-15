@@ -49,6 +49,15 @@ CPMAddPackage(
 
 )
 
+
+#Add GQF and Bulk TCF
+
+CPMAddPackage(
+  NAME gqf
+  GITHUB_REPOSITORY PASSIONLab/gpu-counting-filter
+  GIT_TAG origin/master
+)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
