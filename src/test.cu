@@ -67,11 +67,23 @@
 #include <warpcore/bloom_filter.cuh>
 
 
-using tiny_static_table_4 = poggers::tables::static_table<uint64_t, uint16_t, poggers::representations::dynamic_container<poggers::representations::key_container,uint16_t>::representation, 4, 4, poggers::insert_schemes::bucket_insert, 20, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher>;
-using tcqf = poggers::tables::static_table<uint64_t,uint16_t, poggers::representations::dynamic_container<poggers::representations::key_container,uint16_t>::representation, 4, 16, poggers::insert_schemes::power_of_n_insert_shortcut_scheme, 2, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher, true, tiny_static_table_4>;
 
 
-using tcqf_no_back = poggers::tables::static_table<uint64_t,uint16_t, poggers::representations::dynamic_container<poggers::representations::key_container,uint16_t>::representation, 4, 16, poggers::insert_schemes::power_of_n_insert_shortcut_scheme, 2, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher>;
+
+// using tiny_static_table_4 = poggers::tables::static_table<uint64_t, uint16_t, poggers::representations::dynamic_container<poggers::representations::key_container,uint16_t>::representation, 4, 4, poggers::insert_schemes::bucket_insert, 20, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher>;
+// using tcf = poggers::tables::static_table<uint64_t,uint16_t, poggers::representations::dynamic_container<poggers::representations::key_container,uint16_t>::representation, 4, 16, poggers::insert_schemes::power_of_n_insert_shortcut_scheme, 2, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher, true, tiny_static_table_4>;
+
+
+
+//Same table but with value support
+//swap out key-only container with key-val pair - dynamic container automatically compresses keys/vals into one uint32
+using tiny_static_table_4 = poggers::tables::static_table<uint64_t, uint16_t, poggers::representations::dynamic_container<poggers::representations::key_val_pair,uint16_t>::representation, 4, 4, poggers::insert_schemes::bucket_insert, 20, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher>;
+using tcf = poggers::tables::static_table<uint64_t,uint16_t, poggers::representations::dynamic_container<poggers::representations::key_val_pair,uint16_t>::representation, 4, 16, poggers::insert_schemes::power_of_n_insert_shortcut_scheme, 2, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher, true, tiny_static_table_4>;
+
+
+
+
+//using tcqf_no_back = poggers::tables::static_table<uint64_t,uint16_t, poggers::representations::dynamic_container<poggers::representations::key_container,uint16_t>::representation, 4, 16, poggers::insert_schemes::power_of_n_insert_shortcut_scheme, 2, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher>;
 
 
 using warpcore_bloom = warpcore::BloomFilter<uint64_t>;
@@ -264,14 +276,14 @@ __global__ void speed_query_kernel(Filter * filter, Key * keys, Val * vals, uint
 
    if (!filter->query(tile,keys[tid], test_val)){
 
-   //    if(tile.thread_rank() == 0)
-   //    atomicAdd((unsigned long long int *) query_misses, 1ULL);
+      if(tile.thread_rank() == 0)
+      atomicAdd((unsigned long long int *) query_misses, 1ULL);
 
-   // } else {
+   } else {
 
-   //    if (test_val != vals[tid] && tile.thread_rank() == 0){
-   //       atomicAdd((unsigned long long int *) query_failures, 1ULL);
-   //    }
+      if (test_val != vals[tid] && tile.thread_rank() == 0){
+         atomicAdd((unsigned long long int *) query_failures, 1ULL);
+      }
 
    }
    //assert(filter->query(tile, keys[tid], val));
@@ -279,13 +291,13 @@ __global__ void speed_query_kernel(Filter * filter, Key * keys, Val * vals, uint
 
 }
 
-__host__ void test_tcqf_speed(const std::string& filename, int num_bits, int num_batches, bool first_file){
+__host__ void test_tcf_speed(const std::string& filename, int num_bits, int num_batches, bool first_file){
 
 
    using Key = uint64_t;
    using Val = uint16_t;
 
-   using Filter = tcqf_no_back;
+   using Filter = tcf;
 
    std::cout << "Starting " << filename << " " << num_bits << std::endl;
 
@@ -294,9 +306,9 @@ __host__ void test_tcqf_speed(const std::string& filename, int num_bits, int num
    // poggers::sizing::size_in_num_slots<2> * Initializer = &pre_init;
 
 
-   poggers::sizing::size_in_num_slots<1> pre_init ((1ULL << num_bits));
+   poggers::sizing::size_in_num_slots<2> pre_init ((1ULL << num_bits), (1ULL << num_bits)/100);
 
-   poggers::sizing::size_in_num_slots<1> * Initializer = &pre_init;
+   poggers::sizing::size_in_num_slots<2> * Initializer = &pre_init;
 
 
 
@@ -732,7 +744,7 @@ __host__ void test_bloom_speed(const std::string& filename, int num_bits, int nu
    using Key = uint64_t;
    using Val = bool;
 
-   using Filter = tcqf;
+   //using Filter = tcqf;
 
    std::cout << "Starting " << filename << " " << num_bits << std::endl;
 
@@ -1032,7 +1044,7 @@ __host__ void test_first_fail(uint64_t num_bits){
 
    //tcqf_find_first_fill<tcqf, uint16_t, uint16_t>(num_bits);
 
-   tcqf_find_first_fill<tcqf_no_back, uint64_t, uint16_t>(num_bits);
+   //tcqf_find_first_fill<tcqf_no_back, uint64_t, uint16_t>(num_bits);
 
 }
 
@@ -1096,12 +1108,12 @@ int main(int argc, char** argv) {
    test_bloom_speed("bloom_results/test", 30, 20, false);
 
 
-   test_tcqf_speed("results/test", 20, 20, true);
-   test_tcqf_speed("results/test", 22, 20, false);
-   test_tcqf_speed("results/test", 24, 20, false);
-   test_tcqf_speed("results/test", 26, 20, false);
-   test_tcqf_speed("results/test", 28, 20, false);
-   test_tcqf_speed("results/test", 30, 20, false);
+   test_tcf_speed("results/test", 20, 20, true);
+   test_tcf_speed("results/test", 22, 20, false);
+   test_tcf_speed("results/test", 24, 20, false);
+   test_tcf_speed("results/test", 26, 20, false);
+   test_tcf_speed("results/test", 28, 20, false);
+   test_tcf_speed("results/test", 30, 20, false);
 
    // test_first_fail(22);
    // test_first_fail(24);
