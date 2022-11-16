@@ -1087,17 +1087,17 @@ int main(int argc, char** argv) {
 
    // warpcore_bloom my_filter((1ULL << 20), 7);
 
-
-   test_bloom_speed("bloom_results/test", 20, 20, true);
-   test_bloom_speed("bloom_results/test", 22, 20, false);
+   //Paper only tests 22-30, so clipping start
+   //test_bloom_speed("bloom_results/test", 20, 20, true);
+   test_bloom_speed("bloom_results/test", 22, 20, true);
    test_bloom_speed("bloom_results/test", 24, 20, false);
    test_bloom_speed("bloom_results/test", 26, 20, false);
    test_bloom_speed("bloom_results/test", 28, 20, false);
    test_bloom_speed("bloom_results/test", 30, 20, false);
 
 
-   test_tcqf_speed("results/test", 20, 20, true);
-   test_tcqf_speed("results/test", 22, 20, false);
+   //test_tcqf_speed("results/test", 20, 20, true);
+   test_tcqf_speed("results/test", 22, 20, true);
    test_tcqf_speed("results/test", 24, 20, false);
    test_tcqf_speed("results/test", 26, 20, false);
    test_tcqf_speed("results/test", 28, 20, false);
