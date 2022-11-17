@@ -329,7 +329,7 @@ __host__ void test_tcf_speed(const std::string& filename, int num_bits, int num_
 
    uint64_t * misses;
 
-   cudaMallocManaged((void **)& misses, sizeof(uint64_t)*5);
+   cudaMallocManaged((void **)& misses, sizeof(uint64_t)*6);
    cudaDeviceSynchronize();
 
    printf("Data generated\n");
@@ -339,6 +339,7 @@ __host__ void test_tcf_speed(const std::string& filename, int num_bits, int num_
    misses[2] = 0;
    misses[3] = 0;
    misses[4] = 0;
+   misses[5] = 0;
 
    //static seed for testing
    Filter * test_filter = Filter::generate_on_device(Initializer, 42);
@@ -433,39 +434,39 @@ __host__ void test_tcf_speed(const std::string& filename, int num_bits, int num_
    }
 
    //deletes
-   // for (uint64_t i = 0; i < num_batches; i++){
+   for (uint64_t i = 0; i < num_batches; i++){
 
-   //    uint64_t start_of_batch = i*nitems/num_batches;
-   //    uint64_t items_in_this_batch = (i+1)*nitems/num_batches;
+      uint64_t start_of_batch = i*nitems/num_batches;
+      uint64_t items_in_this_batch = (i+1)*nitems/num_batches;
 
-   //    if (items_in_this_batch > nitems) items_in_this_batch = nitems;
+      if (items_in_this_batch > nitems) items_in_this_batch = nitems;
 
-   //    items_in_this_batch = items_in_this_batch - start_of_batch;
-
-
-   //   // batch_amount[i] = items_in_this_batch;
+      items_in_this_batch = items_in_this_batch - start_of_batch;
 
 
-   //    cudaMalloc((void **)& dev_keys, items_in_this_batch*sizeof(Key));
-   //    //cudaMalloc((void **)& dev_vals, items_in_this_batch*sizeof(Val));
+     // batch_amount[i] = items_in_this_batch;
 
 
-   //    cudaMemcpy(dev_keys, host_keys+start_of_batch, items_in_this_batch*sizeof(Key), cudaMemcpyHostToDevice);
-   //    //cudaMemcpy(dev_vals, host_vals+start_of_batch, items_in_this_batch*sizeof(Val), cudaMemcpyHostToDevice);
+      cudaMalloc((void **)& dev_keys, items_in_this_batch*sizeof(Key));
+      //cudaMalloc((void **)& dev_vals, items_in_this_batch*sizeof(Val));
 
-   //    cudaDeviceSynchronize();
 
-   //    auto delete_start = std::chrono::high_resolution_clock::now();
+      cudaMemcpy(dev_keys, host_keys+start_of_batch, items_in_this_batch*sizeof(Key), cudaMemcpyHostToDevice);
+      //cudaMemcpy(dev_vals, host_vals+start_of_batch, items_in_this_batch*sizeof(Val), cudaMemcpyHostToDevice);
 
-   //    speed_query_kernel<Filter, Key, Val><<<test_filter->get_num_blocks(items_in_this_batch),test_filter->get_block_size(items_in_this_batch)>>>(test_filter, dev_keys, dev_vals, items_in_this_batch, &misses[1], &misses[2]);
-   //    cudaDeviceSynchronize();
-   //    auto delete_end = std::chrono::high_resolution_clock::now();
+      cudaDeviceSynchronize();
+
+      auto delete_start = std::chrono::high_resolution_clock::now();
+
+      speed_remove_kernel<Filter, Key, Val><<<test_filter->get_num_blocks(items_in_this_batch),test_filter->get_block_size(items_in_this_batch)>>>(test_filter, dev_keys, items_in_this_batch, &misses[5]);
+      cudaDeviceSynchronize();
+      auto delete_end = std::chrono::high_resolution_clock::now();
 
 
      
-   //    delete_diff[i] = delete_end - delete_start;
+      delete_diff[i] = delete_end - delete_start;
 
-   // }
+   }
 
    cudaDeviceSynchronize();
 
@@ -481,7 +482,7 @@ __host__ void test_tcf_speed(const std::string& filename, int num_bits, int num_
    //time to output
 
 
-   printf("nitems: %llu, inserts: %llu, query missed: %llu, query wrong %llu, fp missed %llu, fp wrong %llu\n", nitems, misses[0], misses[1], misses[2], misses[3], misses[4]);
+   printf("nitems: %llu, inserts: %llu, query missed: %llu, query wrong %llu, fp missed %llu, fp wrong %llu, %llu deletes missed\n", nitems, misses[0], misses[1], misses[2], misses[3], misses[4], misses[5]);
 
    std::chrono::duration<double> summed_insert_diff = std::chrono::nanoseconds::zero();
 
@@ -1100,16 +1101,16 @@ int main(int argc, char** argv) {
    // warpcore_bloom my_filter((1ULL << 20), 7);
 
 
-   test_bloom_speed("bloom_results/test", 20, 20, true);
-   test_bloom_speed("bloom_results/test", 22, 20, false);
+   // test_bloom_speed("bloom_results/test", 20, 20, true);
+   test_bloom_speed("bloom_results/test", 22, 20, true);
    test_bloom_speed("bloom_results/test", 24, 20, false);
    test_bloom_speed("bloom_results/test", 26, 20, false);
    test_bloom_speed("bloom_results/test", 28, 20, false);
    test_bloom_speed("bloom_results/test", 30, 20, false);
 
 
-   test_tcf_speed("results/test", 20, 20, true);
-   test_tcf_speed("results/test", 22, 20, false);
+   // test_tcf_speed("results/test", 20, 20, true);
+   test_tcf_speed("results/test", 22, 20, true);
    test_tcf_speed("results/test", 24, 20, false);
    test_tcf_speed("results/test", 26, 20, false);
    test_tcf_speed("results/test", 28, 20, false);
