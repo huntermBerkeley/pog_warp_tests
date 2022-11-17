@@ -31,7 +31,7 @@ include(cmake/CPM.cmake)
 #macro for configuring executable
 include(cmake/ConfigureExecutable.cmake)
 
-set(CPM_SOURCE_CACHE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/.cache/CPM")
+set(CPM_SOURCE_CACHE "${CMAKE_CURRENT_SOURCE_DIR}/downloaded_libraries")
 
 ## Package Target
 
@@ -39,6 +39,7 @@ CPMAddPackage(
   NAME poggers
   GITHUB_REPOSITORY huntermBerkeley/poggers
   GIT_TAG origin/main
+  VERSION v1.0
 )
 
 
@@ -49,14 +50,6 @@ CPMAddPackage(
 
 )
 
-
-#Add GQF and Bulk TCF
-
-CPMAddPackage(
-  NAME gqf
-  GITHUB_REPOSITORY PASSIONLab/gpu-counting-filter
-  GIT_TAG origin/master
-)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -72,13 +65,9 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda --expt-relaxed-
 
 ConfigureExecutable(test "${CMAKE_CURRENT_SOURCE_DIR}/src/test.cu" "${CMAKE_BINARY_DIR}")
 
-configureExecutable(copy_and_sort "${CMAKE_CURRENT_SOURCE_DIR}/src/copy_and_sort.cu" "${CMAKE_BINARY_DIR}")
-
 
 target_link_libraries(test PRIVATE poggers)
 target_link_libraries(test PRIVATE warpcore)
 
-target_link_libraries(copy_and_sort PRIVATE poggers)
-target_link_libraries(copy_and_sort PRIVATE warpcore)
 
 

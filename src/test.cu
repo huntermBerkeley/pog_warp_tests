@@ -516,7 +516,7 @@ __host__ void test_tcf_speed(const std::string& filename, int num_bits, int num_
    std::string agg_lookup_file = filename + "_aggregate_lookup.txt";
    std::string agg_fp_file = filename + "_aggregate_fp.txt";
 
-   std::string del_file = filename + "_aggregate_delets.txt";
+   std::string del_file = filename + "_aggregate_deletes.txt";
 
 
 
