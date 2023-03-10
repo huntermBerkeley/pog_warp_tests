@@ -27,6 +27,7 @@
 #include <poggers/insert_schemes/power_of_n.cuh>
 #include <poggers/representations/key_val_pair.cuh>
 #include <poggers/representations/shortened_key_val_pair.cuh>
+#include <poggers/probing_schemes/xor_power_of_two.cuh>
 
 
 #include <poggers/representations/dynamic_container.cuh>
@@ -35,6 +36,56 @@
 #include <poggers/sizing/default_sizing.cuh>
 #include <poggers/sizing/variadic_sizing.cuh>
 #include <poggers/tables/base_table.cuh>
+
+#include <poggers/metadata.cuh>
+#include <poggers/hash_schemes/murmurhash.cuh>
+#include <poggers/probing_schemes/linear_probing.cuh>
+#include <poggers/probing_schemes/double_hashing.cuh>
+#include <poggers/probing_schemes/power_of_two.cuh>
+#include <poggers/insert_schemes/single_slot_insert.cuh>
+#include <poggers/insert_schemes/bucket_insert.cuh>
+#include <poggers/insert_schemes/power_of_n.cuh>
+#include <poggers/representations/key_val_pair.cuh>
+#include <poggers/representations/shortened_key_val_pair.cuh>
+#include <poggers/sizing/default_sizing.cuh>
+#include <poggers/tables/base_table.cuh>
+#include <poggers/insert_schemes/power_of_n_shortcut.cuh>
+
+#include <poggers/sizing/variadic_sizing.cuh>
+
+#include <poggers/representations/soa.cuh>
+#include <poggers/insert_schemes/power_of_n_shortcut_buckets.cuh>
+
+#include <poggers/tables/bucketed_table.cuh>
+
+#include <poggers/metadata.cuh>
+#include <poggers/hash_schemes/murmurhash.cuh>
+#include <poggers/probing_schemes/double_hashing.cuh>
+#include <poggers/probing_schemes/power_of_two.cuh>
+
+// new container for 2-byte key val pairs
+#include <poggers/representations/grouped_key_val_pair.cuh>
+
+#include <poggers/representations/key_val_pair.cuh>
+#include <poggers/representations/dynamic_container.cuh>
+
+#include <poggers/sizing/default_sizing.cuh>
+
+#include <poggers/insert_schemes/power_of_n_shortcut.cuh>
+
+#include <poggers/insert_schemes/power_of_n_shortcut_buckets.cuh>
+
+#include <poggers/representations/packed_bucket.cuh>
+
+#include <poggers/insert_schemes/linear_insert_buckets.cuh>
+
+#include <poggers/tables/bucketed_table.cuh>
+
+#include <poggers/representations/grouped_storage_sub_bits.cuh>
+
+#include <poggers/probing_schemes/xor_power_of_two.cuh>
+
+
 
 #include <stdio.h>
 #include <iostream>
@@ -77,8 +128,25 @@
 
 //Same table but with value support
 //swap out key-only container with key-val pair - dynamic container automatically compresses keys/vals into one uint32
-using tiny_static_table_4 = poggers::tables::static_table<uint64_t, uint16_t, poggers::representations::dynamic_container<poggers::representations::key_val_pair,uint16_t>::representation, 4, 4, poggers::insert_schemes::bucket_insert, 20, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher>;
-using tcf = poggers::tables::static_table<uint64_t,uint16_t, poggers::representations::dynamic_container<poggers::representations::key_val_pair,uint16_t>::representation, 4, 16, poggers::insert_schemes::power_of_n_insert_shortcut_scheme, 2, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher, true, tiny_static_table_4>;
+// using tiny_static_table_4 = poggers::tables::static_table<uint64_t, uint16_t, poggers::representations::dynamic_container<poggers::representations::key_val_pair,uint16_t>::representation, 4, 4, poggers::insert_schemes::bucket_insert, 20, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher>;
+// using tcf = poggers::tables::static_table<uint64_t,uint16_t, poggers::representations::dynamic_container<poggers::representations::key_val_pair,uint16_t>::representation, 4, 16, poggers::insert_schemes::power_of_n_insert_shortcut_scheme, 2, poggers::probing_schemes::doubleHasher, poggers::hashers::murmurHasher, true, tiny_static_table_4>;
+
+
+using del_backing_table = poggers::tables::bucketed_table<
+    uint64_t, uint16_t,
+    poggers::representations::dynamic_bucket_container<poggers::representations::dynamic_container<
+        poggers::representations::bit_grouped_container<16, 16>::representation, uint16_t>::representation>::representation,
+    4, 8, poggers::insert_schemes::linear_insert_bucket_scheme, 400, poggers::probing_schemes::linearProber,
+    poggers::hashers::murmurHasher>;
+
+
+
+using tcf = poggers::tables::bucketed_table<
+    uint64_t, uint16_t,
+    poggers::representations::dynamic_bucket_container<poggers::representations::dynamic_container<
+        poggers::representations::bit_grouped_container<16, 16>::representation, uint16_t>::representation>::representation,
+    4, 16, poggers::insert_schemes::power_of_n_insert_shortcut_bucket_scheme, 2, poggers::probing_schemes::XORPowerOfTwoHasher,
+    poggers::hashers::murmurHasher, true, del_backing_table>;
 
 
 
@@ -482,7 +550,7 @@ __host__ void test_tcf_speed(const std::string& filename, int num_bits, int num_
    //time to output
 
 
-   printf("nitems: %llu, inserts: %llu, query missed: %llu, query wrong %llu, fp missed %llu, fp wrong %llu, %llu deletes missed\n", nitems, misses[0], misses[1], misses[2], misses[3], misses[4], misses[5]);
+   printf("nbits: %d nitems: %llu, inserts: %llu, query missed: %llu, query wrong %llu, fp missed %llu, fp wrong %llu, %llu deletes missed\n", num_bits, nitems, misses[0], misses[1], misses[2], misses[3], misses[4], misses[5]);
 
    std::chrono::duration<double> summed_insert_diff = std::chrono::nanoseconds::zero();
 

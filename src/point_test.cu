@@ -1089,25 +1089,25 @@ int main(int argc, char** argv) {
 
    //Paper only tests 22-30, so clipping start
    //test_bloom_speed("bloom_results/test", 20, 20, true);
-   test_bloom_speed("bloom_results/test", 22, 20, true);
-   test_bloom_speed("bloom_results/test", 24, 20, false);
-   test_bloom_speed("bloom_results/test", 26, 20, false);
-   test_bloom_speed("bloom_results/test", 28, 20, false);
-   test_bloom_speed("bloom_results/test", 30, 20, false);
+   // test_bloom_speed("bloom_results/test", 22, 20, true);
+   // test_bloom_speed("bloom_results/test", 24, 20, false);
+   // test_bloom_speed("bloom_results/test", 26, 20, false);
+   // test_bloom_speed("bloom_results/test", 28, 20, false);
+   // test_bloom_speed("bloom_results/test", 30, 20, false);
 
 
-   //test_tcqf_speed("results/test", 20, 20, true);
-   test_tcqf_speed("results/test", 22, 20, true);
-   test_tcqf_speed("results/test", 24, 20, false);
-   test_tcqf_speed("results/test", 26, 20, false);
-   test_tcqf_speed("results/test", 28, 20, false);
-   test_tcqf_speed("results/test", 30, 20, false);
+   // //test_tcqf_speed("results/test", 20, 20, true);
+   // test_tcqf_speed("results/test", 22, 20, true);
+   // test_tcqf_speed("results/test", 24, 20, false);
+   // test_tcqf_speed("results/test", 26, 20, false);
+   // test_tcqf_speed("results/test", 28, 20, false);
+   // test_tcqf_speed("results/test", 30, 20, false);
 
-   // test_first_fail(22);
-   // test_first_fail(24);
-   // test_first_fail(26);
-   // test_first_fail(28);
-   // test_first_fail(30);
+   test_first_fail(22);
+   test_first_fail(24);
+   test_first_fail(26);
+   test_first_fail(28);
+   test_first_fail(30);
 
 
 	return 0;

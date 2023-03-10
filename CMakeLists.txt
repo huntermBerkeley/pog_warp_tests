@@ -39,7 +39,6 @@ CPMAddPackage(
   NAME poggers
   GITHUB_REPOSITORY huntermBerkeley/poggers
   GIT_TAG origin/main
-  VERSION v1.0
 )
 
 
@@ -66,8 +65,15 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda --expt-relaxed-
 ConfigureExecutable(test "${CMAKE_CURRENT_SOURCE_DIR}/src/test.cu" "${CMAKE_BINARY_DIR}")
 
 
+ConfigureExecutable(point_test "${CMAKE_CURRENT_SOURCE_DIR}/src/point_test.cu" "${CMAKE_BINARY_DIR}")
+
+
 target_link_libraries(test PRIVATE poggers)
 target_link_libraries(test PRIVATE warpcore)
+
+
+target_link_libraries(point_test PRIVATE poggers)
+target_link_libraries(point_test PRIVATE warpcore)
 
 
 
